@@ -52,4 +52,12 @@ class Booking extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    /**
+     * Prepare a date for array / JSON serialization.
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 }

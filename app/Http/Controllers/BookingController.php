@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 
@@ -32,8 +33,8 @@ class BookingController extends Controller
             'estimated_distance' => $validated['estimated_distance'] ?? null,
             'requires_allowance' => $validated['requires_allowance'] ?? false,
             'remarks' => $validated['remarks'] ?? null,
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
+            'start_time' => Carbon::parse($validated['start_time'], 'Asia/Colombo')->format('Y-m-d H:i:s'),
+            'end_time' => Carbon::parse($validated['end_time'], 'Asia/Colombo')->format('Y-m-d H:i:s'),
             'status' => 'pending',
         ]);
 
