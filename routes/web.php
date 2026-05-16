@@ -2,13 +2,20 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\VehicleStatusController;
 use App\Models\Branch;
+use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
     return Inertia::render('Home', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -16,28 +23,52 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
         'branches' => Branch::all(),
     ]);
-});
+})->name('home');
 
 // Vehicle Status (Public)
 Route::get('/vehicle-status', VehicleStatusController::class)->name('vehicle.status');
 
-use App\Models\Booking;
-
 Route::get('/dashboard', function (Illuminate\Http\Request $request) {
     $user = $request->user();
-    $bookings = [];
 
-    if ($user->role === 'transport_admin') {
-        $bookings = Booking::with('user')->orderBy('created_at', 'desc')->get();
-    } elseif ($user->role === 'branch_user') {
-        // branch user sees only their branch bookings or their own bookings
-        $bookings = Booking::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+    switch ($user->role) {
+        case 'super_admin':
+            return Inertia::render('SuperAdminDashboard', [
+                'branches' => Branch::all(),
+                'users' => User::all(),
+            ]);
+
+        case 'branch_user':
+            return Inertia::render('BranchUserDashboard', [
+                'approvedBookings' => Booking::whereIn('status', ['Approved', 'approved'])->get(),
+                'history' => Booking::where('branch_id', $user->branch_id)->orderBy('created_at', 'desc')->get(),
+            ]);
+
+        case 'transport_admin':
+            return Inertia::render('TransportAdminDashboard', [
+                'pendingRequests' => Booking::with('user')->whereIn('status', ['Pending', 'pending'])->orderBy('created_at', 'asc')->get(),
+                'activeTrip' => Booking::with('user')
+                    ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
+                    ->where('start_time', '<=', now())
+                    ->where('end_time', '>=', now())
+                    ->first(),
+            ]);
+
+        case 'top_management':
+            return Inertia::render('TopManagementDashboard', [
+                'approvedBookings' => Booking::with('user')->whereIn('status', ['Approved', 'approved'])->get(),
+                'stats' => [
+                    'todayBookings' => Booking::whereDate('created_at', today())->count(),
+                    'weeklyApproved' => Booking::whereIn('status', ['Approved', 'approved'])->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                    'weeklyRejected' => Booking::whereIn('status', ['Rejected', 'rejected'])->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                ]
+            ]);
+
+        default:
+            return Inertia::render('Dashboard', [
+                'userRole' => $user->role,
+            ]);
     }
-
-    return Inertia::render('Dashboard', [
-        'bookings' => $bookings,
-        'userRole' => $user->role,
-    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -53,11 +84,25 @@ Route::middleware('auth')->group(function () {
     // Top Management & Transport Admin
     Route::middleware('role:top_management,transport_admin')->group(function () {
         Route::post('/bookings/{booking}/approve', [BookingController::class, 'approve'])->name('bookings.approve');
+        Route::post('/bookings/{booking}/reject', [BookingController::class, 'reject'])->name('bookings.reject');
     });
 
     // Transport Admin
     Route::middleware('role:transport_admin')->group(function () {
-        Route::post('/bookings/{booking}/return', [BookingController::class, 'markAsReturned'])->name('bookings.return');
+        Route::post('/bookings/{booking}/mark-returned', [BookingController::class, 'markAsReturned'])->name('bookings.mark-returned');
+    });
+
+    // Super Admin
+    Route::middleware('role:super_admin')->group(function () {
+        // Branches
+        Route::post('/super-admin/branches', [SuperAdminController::class, 'storeBranch'])->name('super-admin.branches.store');
+        Route::put('/super-admin/branches/{branch}', [SuperAdminController::class, 'updateBranch'])->name('super-admin.branches.update');
+        Route::delete('/super-admin/branches/{branch}', [SuperAdminController::class, 'destroyBranch'])->name('super-admin.branches.destroy');
+
+        // Users
+        Route::post('/super-admin/users', [SuperAdminController::class, 'storeUser'])->name('super-admin.users.store');
+        Route::put('/super-admin/users/{user}', [SuperAdminController::class, 'updateUser'])->name('super-admin.users.update');
+        Route::delete('/super-admin/users/{user}', [SuperAdminController::class, 'destroyUser'])->name('super-admin.users.destroy');
     });
 });
 

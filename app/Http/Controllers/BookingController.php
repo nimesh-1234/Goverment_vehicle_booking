@@ -62,6 +62,16 @@ class BookingController extends Controller
     }
 
     /**
+     * Reject a booking.
+     */
+    public function reject(Booking $booking): RedirectResponse
+    {
+        $booking->update(['status' => 'rejected']);
+
+        return redirect()->back()->with('success', 'Booking rejected.');
+    }
+
+    /**
      * Mark a booking as returned / completed (Transport Admin).
      */
     public function markAsReturned(Booking $booking): RedirectResponse

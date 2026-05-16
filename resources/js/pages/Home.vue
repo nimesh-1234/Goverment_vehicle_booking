@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
-import { vehicleStatus as getVehicleStatusRoute } from '@/routes/vehicle-status';
 
 defineProps<{
     canLogin?: boolean;
@@ -14,18 +13,8 @@ defineProps<{
     }>;
 }>();
 
-const vehicleStatus = ref('Loading...');
-
-onMounted(async () => {
-    try {
-        const response = await fetch(getVehicleStatusRoute.url());
-        const data = await response.json();
-        vehicleStatus.value = data.status;
-    } catch (error) {
-        console.error("Failed to fetch vehicle status:", error);
-        vehicleStatus.value = 'Unknown';
-    }
-});
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
 </script>
 
 <template>
@@ -33,7 +22,7 @@ onMounted(async () => {
     <MainLayout>
         <template #header-actions>
             <Link
-                v-if="canLogin"
+                v-if="canLogin && !user"
                 :href="route('login')"
                 class="font-semibold hover:text-gray-200"
             >
@@ -41,30 +30,13 @@ onMounted(async () => {
             </Link>
 
             <Link
-                v-if="canRegister"
+                v-if="canRegister && !user"
                 :href="route('register')"
                 class="font-semibold hover:text-gray-200 ml-4"
             >
                 Register
             </Link>
         </template>
-
-        <!-- Live Status Banner -->
-        <div class="mb-10 p-6 rounded-lg shadow-lg text-center transition-colors duration-500"
-             :class="{
-                 'bg-green-500 text-white': vehicleStatus === 'Available',
-                 'bg-red-500 text-white': vehicleStatus === 'On Trip',
-                 'bg-gray-400 text-white': vehicleStatus === 'Loading...' || vehicleStatus === 'Unknown'
-             }">
-            <h2 class="text-4xl font-extrabold tracking-tight uppercase">
-                {{ vehicleStatus }}
-            </h2>
-            <p class="mt-2 text-lg opacity-90">
-                {{ vehicleStatus === 'Available' ? 'The official vehicle is currently available for booking.' : 
-                   vehicleStatus === 'On Trip' ? 'The official vehicle is currently engaged in a trip.' : 
-                   'Fetching latest status...' }}
-            </p>
-        </div>
 
         <!-- Branch Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -78,7 +50,14 @@ onMounted(async () => {
                     </span>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-6 text-center line-clamp-2 h-14">{{ branch.name }}</h3>
-                <Link v-if="canLogin" :href="route('login')" class="w-full mt-auto">
+                
+                <!-- Conditional Buttons based on Auth Status -->
+                <Link v-if="user" :href="route('dashboard')" class="w-full mt-auto">
+                    <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
+                        Go to Dashboard
+                    </button>
+                </Link>
+                <Link v-else-if="canLogin" :href="route('login')" class="w-full mt-auto">
                     <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
                         Login
                     </button>
