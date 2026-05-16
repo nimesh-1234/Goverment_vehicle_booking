@@ -36,10 +36,12 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
             return Inertia::render('SuperAdminDashboard', [
                 'branches' => Branch::all(),
                 'users' => User::all(),
+                'allBookings' => Booking::with('user', 'branch')->orderBy('created_at', 'desc')->get(),
             ]);
 
         case 'branch_user':
             return Inertia::render('BranchUserDashboard', [
+                'branchName' => $user->branch->name ?? 'Unknown',
                 'approvedBookings' => Booking::whereIn('status', ['Approved', 'approved'])->get(),
                 'history' => Booking::where('branch_id', $user->branch_id)->orderBy('created_at', 'desc')->get(),
             ]);
@@ -49,9 +51,10 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
                 'pendingRequests' => Booking::with('user')->whereIn('status', ['Pending', 'pending'])->orderBy('created_at', 'asc')->get(),
                 'activeTrip' => Booking::with('user')
                     ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
-                    ->where('start_time', '<=', now())
-                    ->where('end_time', '>=', now())
+                    ->where('start_time', '<=', now()->timezone('UTC'))
+                    ->where('end_time', '>=', now()->timezone('UTC'))
                     ->first(),
+                'allBookings' => Booking::with('user', 'branch')->orderBy('created_at', 'desc')->get(),
             ]);
 
         case 'top_management':
@@ -90,6 +93,8 @@ Route::middleware('auth')->group(function () {
     // Transport Admin
     Route::middleware('role:transport_admin')->group(function () {
         Route::post('/bookings/{booking}/mark-returned', [BookingController::class, 'markAsReturned'])->name('bookings.mark-returned');
+        Route::put('/bookings/{booking}', [BookingController::class, 'update'])->name('transport-admin.bookings.update');
+        Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('transport-admin.bookings.destroy');
     });
 
     // Super Admin
@@ -103,6 +108,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/super-admin/users', [SuperAdminController::class, 'storeUser'])->name('super-admin.users.store');
         Route::put('/super-admin/users/{user}', [SuperAdminController::class, 'updateUser'])->name('super-admin.users.update');
         Route::delete('/super-admin/users/{user}', [SuperAdminController::class, 'destroyUser'])->name('super-admin.users.destroy');
+        
+        // Bookings
+        Route::put('/super-admin/bookings/{booking}', [BookingController::class, 'update'])->name('super-admin.bookings.update');
+        Route::delete('/super-admin/bookings/{booking}', [BookingController::class, 'destroy'])->name('super-admin.bookings.destroy');
     });
 });
 

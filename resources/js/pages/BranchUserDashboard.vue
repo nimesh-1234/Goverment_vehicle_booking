@@ -1,7 +1,7 @@
 <template>
   <MainLayout>
     <div class="space-y-6">
-      <h2 class="text-2xl font-semibold text-gray-800">Branch User Dashboard</h2>
+      <h2 class="text-2xl font-semibold text-gray-800">{{ branchName }} Dashboard</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Calendar Section -->
@@ -98,6 +98,10 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const props = defineProps({
+  branchName: {
+    type: String,
+    default: 'Branch'
+  },
   approvedBookings: {
     type: Array,
     default: () => []

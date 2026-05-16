@@ -81,4 +81,38 @@ class BookingController extends Controller
 
         return redirect()->back()->with('success', 'Vehicle marked as returned.');
     }
+
+    /**
+     * Update an existing booking (Admin/Super Admin).
+     */
+    public function update(Request $request, Booking $booking): RedirectResponse
+    {
+        $validated = $request->validate([
+            'destination' => 'required|string|max:255',
+            'purpose' => 'required|string|max:255',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'status' => 'required|string|in:pending,approved,rejected,completed,On Trip',
+        ]);
+
+        $booking->update([
+            'destination' => $validated['destination'],
+            'purpose' => $validated['purpose'],
+            'start_time' => Carbon::parse($validated['start_time'], 'Asia/Colombo')->format('Y-m-d H:i:s'),
+            'end_time' => Carbon::parse($validated['end_time'], 'Asia/Colombo')->format('Y-m-d H:i:s'),
+            'status' => strtolower($validated['status']),
+        ]);
+
+        return redirect()->back()->with('success', 'Booking updated successfully.');
+    }
+
+    /**
+     * Delete a booking (Admin/Super Admin).
+     */
+    public function destroy(Booking $booking): RedirectResponse
+    {
+        $booking->delete();
+
+        return redirect()->back()->with('success', 'Booking deleted successfully.');
+    }
 }
