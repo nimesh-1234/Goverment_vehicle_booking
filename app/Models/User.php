@@ -32,4 +32,12 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    /**
+     * Get the branch that the user belongs to.
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

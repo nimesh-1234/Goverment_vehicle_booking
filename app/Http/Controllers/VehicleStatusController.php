@@ -14,11 +14,11 @@ class VehicleStatusController extends Controller
      */
     public function __invoke(Request $request): JsonResponse
     {
-        $nowUtc = now()->timezone('UTC');
+        $now = \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString();
 
         $onTrip = Booking::whereIn('status', ['approved', 'Approved', 'on_trip', 'On Trip'])
-            ->where('start_time', '<=', $nowUtc)
-            ->where('end_time', '>=', $nowUtc)
+            ->where('start_time', '<=', $now)
+            ->where('end_time', '>=', $now)
             ->exists();
 
         $status = $onTrip ? 'On Trip' : 'Available';

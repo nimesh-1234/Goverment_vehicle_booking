@@ -44,6 +44,7 @@ defineProps<Props>();
             class="block w-full cursor-pointer"
             :href="logout()"
             @click="handleLogout"
+            method="post"
             as="button"
             data-test="logout-button"
         >

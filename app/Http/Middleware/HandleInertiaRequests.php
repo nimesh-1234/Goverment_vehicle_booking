@@ -34,6 +34,14 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'currentStatus' => function () {
+                $now = \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString();
+                $isOnTrip = \App\Models\Booking::whereIn('status', ['approved', 'Approved', 'on_trip', 'On Trip'])
+                    ->where('start_time', '<=', $now)
+                    ->where('end_time', '>=', $now)
+                    ->exists();
+                return $isOnTrip ? 'On Trip' : 'Available';
+            },
         ];
     }
 }

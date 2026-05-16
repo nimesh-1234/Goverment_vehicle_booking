@@ -41,7 +41,7 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
 
         case 'branch_user':
             return Inertia::render('BranchUserDashboard', [
-                'branchName' => $user->branch->name ?? 'Unknown',
+                'branchName' => \Illuminate\Support\Facades\Auth::user()->branch?->name ?? 'Unknown Branch',
                 'approvedBookings' => Booking::whereIn('status', ['Approved', 'approved'])->get(),
                 'history' => Booking::where('branch_id', $user->branch_id)->orderBy('created_at', 'desc')->get(),
             ]);
@@ -51,8 +51,8 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
                 'pendingRequests' => Booking::with('user')->whereIn('status', ['Pending', 'pending'])->orderBy('created_at', 'asc')->get(),
                 'activeTrip' => Booking::with('user')
                     ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
-                    ->where('start_time', '<=', now()->timezone('UTC'))
-                    ->where('end_time', '>=', now()->timezone('UTC'))
+                    ->where('start_time', '<=', \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString())
+                    ->where('end_time', '>=', \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString())
                     ->first(),
                 'allBookings' => Booking::with('user', 'branch')->orderBy('created_at', 'desc')->get(),
             ]);
