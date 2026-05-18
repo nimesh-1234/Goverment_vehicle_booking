@@ -49,17 +49,19 @@ class SuperAdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'username' => ['nullable', 'string', 'max:255', 'unique:users,username'],
             'password' => ['required', Rules\Password::defaults()],
             'role' => ['required', 'string', 'in:branch_user,transport_admin,top_management,super_admin'],
             'branch_id' => ['nullable', 'exists:branches,id'],
         ]);
 
         User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name' => $validated['name'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'username' => $validated['username'] ?? null,
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'branch_id' => $validated['branch_id'],
+            'role' => $validated['role'] ?? null,
+            'branch_id' => $validated['branch_id'] ?? null,
         ]);
 
         return redirect()->back()->with('success', 'User created successfully.');
@@ -70,6 +72,7 @@ class SuperAdminController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class.',email,'.$user->id],
+            'username' => ['nullable', 'string', 'max:255', 'unique:users,username,'.$user->id],
             'role' => ['required', 'string', 'in:branch_user,transport_admin,top_management,super_admin'],
             'branch_id' => ['nullable', 'exists:branches,id'],
         ];
@@ -82,10 +85,11 @@ class SuperAdminController extends Controller
         $validated = $request->validate($rules);
 
         $dataToUpdate = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'branch_id' => $validated['branch_id'],
+            'name' => $validated['name'] ?? $user->name,
+            'email' => $validated['email'] ?? $user->email,
+            'username' => $validated['username'] ?? null,
+            'role' => $validated['role'] ?? $user->role,
+            'branch_id' => $validated['branch_id'] ?? null,
         ];
 
         if ($request->filled('password')) {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Booking;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -34,12 +36,17 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'flash' => [
+                'error' => fn () => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
+            ],
             'currentStatus' => function () {
-                $now = \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString();
-                $isOnTrip = \App\Models\Booking::whereIn('status', ['approved', 'Approved', 'on_trip', 'On Trip'])
+                $now = Carbon::now('Asia/Colombo')->toDateTimeString();
+                $isOnTrip = Booking::whereIn('status', ['approved', 'Approved', 'on_trip', 'On Trip'])
                     ->where('start_time', '<=', $now)
                     ->where('end_time', '>=', $now)
                     ->exists();
+
                 return $isOnTrip ? 'On Trip' : 'Available';
             },
         ];

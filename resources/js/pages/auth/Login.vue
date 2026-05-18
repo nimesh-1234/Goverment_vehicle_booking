@@ -16,15 +16,20 @@ defineProps({
     },
 });
 
+const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const branchId = urlParams.get('branch_id');
+
 const form = useForm({
-    email: '',
+    username: '',
     password: '',
     remember: false,
+    branch_id: branchId || null,
 });
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
+        replace: true,
     });
 };
 </script>
@@ -39,19 +44,19 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="username" value="Email or Username" />
 
                 <TextInput
-                    id="email"
-                    type="email"
+                    id="username"
+                    type="text"
                     class="mt-1 block w-full"
-                    v-model="form.email"
+                    v-model="form.username"
                     required
                     autofocus
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
             <div class="mt-4">

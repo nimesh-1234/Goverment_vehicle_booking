@@ -1,34 +1,33 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\VehicleStatusController;
-use App\Models\Branch;
 use App\Models\Booking;
+use App\Models\Branch;
 use App\Models\User;
-use Illuminate\Foundation\Application;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-
-    return Inertia::render('Home', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-        'branches' => Branch::all(),
+    // We removed the Auth::check() redirect here. 
+    // Now everyone can see the Home page, and the Vue frontend will handle the button states.
+    return \Inertia\Inertia::render('Home', [
+        'branches' => \App\Models\Branch::all(),
+        'approvedBookings' => \App\Models\Booking::with('branch')
+            ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
+            ->get(),
     ]);
 })->name('home');
 
 // Vehicle Status (Public)
 Route::get('/vehicle-status', VehicleStatusController::class)->name('vehicle.status');
 
-Route::get('/dashboard', function (Illuminate\Http\Request $request) {
+Route::get('/dashboard', function (Request $request) {
     $user = $request->user();
 
     switch ($user->role) {
@@ -41,7 +40,7 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
 
         case 'branch_user':
             return Inertia::render('BranchUserDashboard', [
-                'branchName' => \Illuminate\Support\Facades\Auth::user()->branch?->name ?? 'Unknown Branch',
+                'branchName' => Auth::user()->branch?->name ?? 'Unknown Branch',
                 'approvedBookings' => Booking::whereIn('status', ['Approved', 'approved'])->get(),
                 'history' => Booking::where('branch_id', $user->branch_id)->orderBy('created_at', 'desc')->get(),
             ]);
@@ -51,8 +50,8 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
                 'pendingRequests' => Booking::with('user')->whereIn('status', ['Pending', 'pending'])->orderBy('created_at', 'asc')->get(),
                 'activeTrip' => Booking::with('user')
                     ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
-                    ->where('start_time', '<=', \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString())
-                    ->where('end_time', '>=', \Carbon\Carbon::now('Asia/Colombo')->toDateTimeString())
+                    ->where('start_time', '<=', Carbon::now('Asia/Colombo')->toDateTimeString())
+                    ->where('end_time', '>=', Carbon::now('Asia/Colombo')->toDateTimeString())
                     ->first(),
                 'allBookings' => Booking::with('user', 'branch')->orderBy('created_at', 'desc')->get(),
             ]);
@@ -64,7 +63,7 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
                     'todayBookings' => Booking::whereDate('created_at', today())->count(),
                     'weeklyApproved' => Booking::whereIn('status', ['Approved', 'approved'])->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'weeklyRejected' => Booking::whereIn('status', ['Rejected', 'rejected'])->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-                ]
+                ],
             ]);
 
         default:
@@ -78,6 +77,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Strict Branch Isolation
+    Route::get('/branch/{id}', function ($id) {
+        return redirect()->route('dashboard')->with('error', 'Unauthorized: You can only access your assigned branch.');
+    })->name('branch.specific');
 
     // Branch Users
     Route::middleware('role:branch_user')->group(function () {
@@ -108,7 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/super-admin/users', [SuperAdminController::class, 'storeUser'])->name('super-admin.users.store');
         Route::put('/super-admin/users/{user}', [SuperAdminController::class, 'updateUser'])->name('super-admin.users.update');
         Route::delete('/super-admin/users/{user}', [SuperAdminController::class, 'destroyUser'])->name('super-admin.users.destroy');
-        
+
         // Bookings
         Route::put('/super-admin/bookings/{booking}', [BookingController::class, 'update'])->name('super-admin.bookings.update');
         Route::delete('/super-admin/bookings/{booking}', [BookingController::class, 'destroy'])->name('super-admin.bookings.destroy');

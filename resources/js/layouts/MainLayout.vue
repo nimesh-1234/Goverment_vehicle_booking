@@ -62,10 +62,10 @@ const statusClasses = computed(() => {
 let intervalId = null;
 
 onMounted(() => {
-  // Poll for status every 30 seconds
+  // Poll for status every 10 seconds
   intervalId = setInterval(() => {
-    router.reload({ only: ['currentStatus'], preserveState: true, preserveScroll: true });
-  }, 30000);
+    router.reload({ preserveState: true, preserveScroll: true });
+  }, 10000);
 });
 
 onUnmounted(() => {

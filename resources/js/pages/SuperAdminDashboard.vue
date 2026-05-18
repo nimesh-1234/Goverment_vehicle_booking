@@ -150,6 +150,11 @@
               <div v-if="userForm.errors.name" class="text-red-600 text-xs mt-1">{{ userForm.errors.name }}</div>
             </div>
             <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Username (Optional)</label>
+              <input v-model="userForm.username" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <div v-if="userForm.errors.username" class="text-red-600 text-xs mt-1">{{ userForm.errors.username }}</div>
+            </div>
+            <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700">Email</label>
               <input v-model="userForm.email" type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
               <div v-if="userForm.errors.email" class="text-red-600 text-xs mt-1">{{ userForm.errors.email }}</div>
@@ -285,6 +290,7 @@ const showUserModal = ref(false);
 const userForm = useForm({
   id: null,
   name: '',
+  username: '',
   email: '',
   password: '',
   role: 'branch_user',
@@ -296,6 +302,7 @@ const openUserModal = (user = null) => {
   if (user) {
     userForm.id = user.id;
     userForm.name = user.name;
+    userForm.username = user.username || '';
     userForm.email = user.email;
     userForm.role = user.role;
     userForm.branch_id = user.branch_id;

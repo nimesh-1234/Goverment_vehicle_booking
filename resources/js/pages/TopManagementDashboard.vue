@@ -3,92 +3,9 @@
     <div class="space-y-6">
       <h2 class="text-2xl font-semibold text-gray-800">Top Management Dashboard</h2>
 
-      <!-- Statistics Section -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="h-10 w-10 rounded-md bg-indigo-500 flex items-center justify-center text-white font-bold text-xl">
-                  B
-                </div>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">Total Bookings Today</dt>
-                  <dd>
-                    <div class="text-lg font-medium text-gray-900">{{ stats.todayBookings }}</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="h-10 w-10 rounded-md bg-green-500 flex items-center justify-center text-white font-bold text-xl">
-                  A
-                </div>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">Approved This Week</dt>
-                  <dd>
-                    <div class="text-lg font-medium text-gray-900">{{ stats.weeklyApproved }}</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="h-10 w-10 rounded-md bg-red-500 flex items-center justify-center text-white font-bold text-xl">
-                  R
-                </div>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">Rejected This Week</dt>
-                  <dd>
-                    <div class="text-lg font-medium text-gray-900">{{ stats.weeklyRejected }}</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="h-10 w-10 rounded-md bg-yellow-500 flex items-center justify-center text-white font-bold text-xl">
-                  V
-                </div>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">Total Vehicles</dt>
-                  <dd>
-                    <div class="text-lg font-medium text-gray-900">1 (PB-4836)</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Calendar Section -->
+      <!-- Global Calendar Section -->
       <div class="bg-white p-6 rounded-lg shadow-sm">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Vehicle Schedule Overview</h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Approved Bookings Calendar</h3>
         <FullCalendar :options="calendarOptions" />
       </div>
     </div>
@@ -101,35 +18,30 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const props = defineProps({
   approvedBookings: {
     type: Array,
     default: () => []
-  },
-  stats: {
-    type: Object,
-    default: () => ({
-      todayBookings: 0,
-      weeklyApproved: 0,
-      weeklyRejected: 0
-    })
   }
 });
 
 const calendarEvents = computed(() => {
   return props.approvedBookings.map(booking => ({
-    title: `${booking.destination} - ${booking.user?.name || 'Unknown'}`,
+    // If you'd like to show the branch name on the global calendar, you can use:
+    // title: `${booking.branch ? booking.branch.name + ' - ' : ''}${booking.destination}`,
+    title: booking.destination,
     start: booking.start_time,
     end: booking.end_time,
-    backgroundColor: '#4f46e5', // Tailwind indigo-600
-    borderColor: '#4f46e5',
+    backgroundColor: '#ef4444',
+    borderColor: '#ef4444',
   }));
 });
 
 const calendarOptions = ref({
-  plugins: [dayGridPlugin, timeGridPlugin],
-  initialView: 'timeGridWeek',
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
@@ -137,6 +49,5 @@ const calendarOptions = ref({
   },
   events: calendarEvents.value,
   height: 'auto',
-  allDaySlot: false,
 });
 </script>

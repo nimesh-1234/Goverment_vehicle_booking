@@ -83,6 +83,12 @@
         </div>
       </div>
 
+      <!-- Approved Bookings Calendar -->
+      <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Approved Bookings Calendar</h3>
+        <FullCalendar :options="calendarOptions" />
+      </div>
+
       <!-- Manage All Bookings -->
       <div class="bg-white p-6 rounded-lg shadow-sm">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Manage All Bookings</h3>
@@ -186,6 +192,10 @@
 import { ref, computed } from 'vue';
 import { usePage, Link, useForm } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const props = defineProps({
   pendingRequests: {
@@ -199,7 +209,33 @@ const props = defineProps({
   allBookings: {
     type: Array,
     default: () => []
+  },
+  approvedBookings: {
+    type: Array,
+    default: () => []
   }
+});
+
+const calendarEvents = computed(() => {
+  return props.approvedBookings.map(booking => ({
+    title: booking.branch ? `${booking.branch.name} - ${booking.destination}` : booking.destination,
+    start: booking.start_time,
+    end: booking.end_time,
+    backgroundColor: '#ef4444',
+    borderColor: '#ef4444',
+  }));
+});
+
+const calendarOptions = ref({
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+  },
+  events: calendarEvents.value,
+  height: 'auto',
 });
 
 const page = usePage();
