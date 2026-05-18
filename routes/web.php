@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    // We removed the Auth::check() redirect here. 
+    // We removed the Auth::check() redirect here.
     // Now everyone can see the Home page, and the Vue frontend will handle the button states.
-    return \Inertia\Inertia::render('Home', [
-        'branches' => \App\Models\Branch::all(),
-        'approvedBookings' => \App\Models\Booking::with('branch')
+    return Inertia::render('Home', [
+        'branches' => Branch::all(),
+        'approvedBookings' => Booking::with('branch')
             ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
             ->get(),
     ]);
@@ -40,9 +40,11 @@ Route::get('/dashboard', function (Request $request) {
 
         case 'branch_user':
             return Inertia::render('BranchUserDashboard', [
-                'branchName' => Auth::user()->branch?->name ?? 'Unknown Branch',
-                'approvedBookings' => Booking::whereIn('status', ['Approved', 'approved'])->get(),
-                'history' => Booking::where('branch_id', $user->branch_id)->orderBy('created_at', 'desc')->get(),
+                'branch' => auth()->user()->branch,
+                'approvedBookings' => Booking::with('branch')
+                    ->where('branch_id', auth()->user()->branch_id) // CRITICAL FIX: Only fetch this branch's bookings
+                    ->whereIn('status', ['Approved', 'approved', 'On Trip', 'on_trip'])
+                    ->get(),
             ]);
 
         case 'transport_admin':
