@@ -216,6 +216,19 @@ const props = defineProps({
   }
 });
 
+let pollingInterval = null;
+
+onMounted(() => {
+    // Automatically reload page data every 15 seconds quietly in the background
+    pollingInterval = setInterval(() => {
+        router.reload({ only: ['pendingRequests', 'activeTrip', 'allBookings', 'approvedBookings'] });
+    }, 15000); 
+});
+
+onUnmounted(() => {
+    if (pollingInterval) clearInterval(pollingInterval);
+});
+
 const calendarEvents = computed(() => {
   return props.approvedBookings.map(booking => ({
     title: booking.branch ? `${booking.branch.name} - ${booking.destination}` : booking.destination,

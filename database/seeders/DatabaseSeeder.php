@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Branch;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +15,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Truncate/clear existing records safely to ensure a clean slate
+        Schema::disableForeignKeyConstraints();
+        User::truncate();
+        Branch::truncate();
+        Schema::enableForeignKeyConstraints();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // 2. Create the default Headquarters branch to satisfy foreign key requirements
+        $headquarters = Branch::create([
+            'name' => 'Headquarters',
+        ]);
+
+        // 3. Create the main Super Admin user
+        User::create([
+            'name' => 'Super Admin',
+            'username' => 'superadmin', // required by your schema
+            'email' => 'superadmin@gov.lk',
+            'password' => Hash::make('password'),
+            'role' => 'super_admin', // As per your Enum definition
+            'branch_id' => $headquarters->id, // Linked to the newly created branch
         ]);
     }
 }

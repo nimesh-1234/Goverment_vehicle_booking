@@ -1,7 +1,7 @@
 <template>
   <MainLayout>
     <div class="space-y-6">
-      <h2 class="text-2xl font-semibold text-gray-800">{{ props.branchName || 'Unknown' }} Dashboard</h2>
+      <h2 class="text-2xl font-semibold text-gray-800">{{ props.branch?.name || 'Unknown' }} Dashboard</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Calendar Section -->
@@ -98,7 +98,10 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const props = defineProps({
-  branchName: String,
+  branch: {
+    type: Object,
+    default: () => null
+  },
   approvedBookings: {
     type: Array,
     default: () => []
@@ -107,6 +110,19 @@ const props = defineProps({
     type: Array,
     default: () => []
   }
+});
+
+let pollingInterval = null;
+
+onMounted(() => {
+    // Automatically reload page data every 15 seconds quietly in the background
+    pollingInterval = setInterval(() => {
+        router.reload({ only: ['branch', 'approvedBookings', 'history'] });
+    }, 15000); 
+});
+
+onUnmounted(() => {
+    if (pollingInterval) clearInterval(pollingInterval);
 });
 
 const form = useForm({

@@ -1,24 +1,31 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-const props = defineProps<{
-    canLogin?: boolean;
-    canRegister?: boolean;
-    branches?: Array<{
-        id: number;
-        name: string;
-        logo_path: string | null;
-    }>;
-    approvedBookings?: Array<any>;
-}>();
+const props = defineProps({
+    branches: { type: Array, default: () => [] },
+    approvedBookings: { type: Array, default: () => [] }
+});
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+
+let pollingInterval = null;
+
+onMounted(() => {
+    // Automatically reload page data every 15 seconds quietly in the background
+    pollingInterval = setInterval(() => {
+        router.reload({ only: ['approvedBookings', 'branches'] });
+    }, 15000); 
+});
+
+onUnmounted(() => {
+    if (pollingInterval) clearInterval(pollingInterval);
+});
 
 // Modal state
 const showModal = ref(false);
@@ -36,13 +43,25 @@ const handleEventClick = (info: any) => {
 
 // Calendar Data
 const calendarEvents = computed(() => {
-    return (props.approvedBookings || []).map(booking => ({
-        title: booking.branch ? `${booking.branch.name} - ${booking.destination}` : booking.destination,
-        start: booking.start_time,
-        end: booking.end_time,
-        backgroundColor: '#4f46e5', // Tailwind indigo-600
-        borderColor: '#4f46e5',
-    }));
+    const now = new Date();
+    return (props.approvedBookings || [])
+        .filter(booking => {
+            const endTime = new Date(booking.end_time);
+            // ONLY keep the event if it is currently "On Trip" OR if the end time is in the future
+            return booking.status === 'On Trip' || booking.status === 'on_trip' || endTime > now;
+        })
+        .map(booking => ({
+            title: booking.branch ? `${booking.branch.name}` : 'Booking',
+            start: booking.start_time,
+            end: booking.end_time,
+            backgroundColor: '#4f46e5',
+            borderColor: '#4338ca',
+            extendedProps: {
+                destination: booking.destination,
+                purpose: booking.purpose,
+                status: booking.status
+            }
+        }));
 });
 
 const calendarOptions = ref({
@@ -76,9 +95,8 @@ const calendarOptions = ref({
                 <div class="flex justify-between items-center h-16">
                     <!-- Left: Logo & Title -->
                     <div class="flex items-center space-x-3">
-                        <!-- Using a placeholder logo if actual file isn't present, but keeping the exact src requested -->
                         <img src="/logo.png" alt="Logo" class="h-10 w-auto object-contain bg-gray-100 rounded-full" onerror="this.style.display='none'" />
-                        <span class="font-bold text-xl text-gray-900 tracking-tight">Gov Transport System</span>
+                        <span class="font-bold text-xl text-blue-950 tracking-tight">Lunugamwehera Divisional Secretariat</span>
                     </div>
 
                     <!-- Right: Auth Links -->
@@ -106,13 +124,13 @@ const calendarOptions = ref({
             <!-- 2. Hero Section (Split Layout) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 lg:h-[450px]">
                 
-                <!-- Left Column (Animation & Tagline) -->
-                <div class="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-center items-center p-8 h-96 lg:h-full">
+                <!-- Left Column (Animation & Tagline) (Light Theme) -->
+                <div class="bg-slate-50 border-0 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-center items-center p-8 h-96 lg:h-full">
                     <div class="relative z-10 text-center mb-16">
-                        <h1 class="text-4xl lg:text-5xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">
-                            Efficient Transport <br/><span class="text-indigo-300">Management</span>
+                        <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight drop-shadow-sm">
+                            Lunugamwehera Divisional <br/><span class="text-indigo-600">Secretariat</span>
                         </h1>
-                        <p class="text-indigo-100 text-lg max-w-md mx-auto">
+                        <p class="text-gray-600 text-lg max-w-md mx-auto">
                             Seamlessly book, track, and manage government vehicles with our state-of-the-art platform.
                         </p>
                     </div>
@@ -120,9 +138,11 @@ const calendarOptions = ref({
                     <!-- Road and Car Animation -->
                     <div class="absolute bottom-10 w-full h-24 bg-gray-800 flex items-center justify-start overflow-hidden border-t-4 border-b-4 border-gray-900 shadow-inner">
                         <!-- Road Dashed Line -->
-                        <div class="absolute w-full border-t-4 border-dashed border-yellow-400 opacity-50 top-1/2 transform -translate-y-1/2"></div>
+                        <div class="absolute w-full border-t-4 border-dashed border-white opacity-50 top-1/2 transform -translate-y-1/2"></div>
                         <!-- Car -->
-                        <div class="car-animation text-6xl relative z-10 drop-shadow-xl select-none">🚗</div>
+                        <div class="text-6xl relative z-10 drop-shadow-xl select-none w-full flex">
+                             <div class="car-wrapper">🚗</div>
+                        </div>
                     </div>
                 </div>
 
@@ -165,7 +185,7 @@ const calendarOptions = ref({
                                 </Link>
                                 <button v-else disabled class="block w-full text-center bg-gray-400 text-white py-2 rounded cursor-not-allowed opacity-75 flex justify-center items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
-                                    Locked
+                                    Locked 🔒
                                 </button>
                             </template>
                             
@@ -184,6 +204,17 @@ const calendarOptions = ref({
                 </div>
             </div>
         </main>
+
+        <footer class="bg-white border-t border-gray-200 mt-16">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                <div>
+                    © 2026 Lunugamwehera Divisional Secretariat. All Rights Reserved.
+                </div>
+                <div class="font-medium text-gray-700">
+                    Designed & Developed by <span class="text-blue-600 font-bold">Nimesh Dilshan</span>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <!-- 3. Interactive Calendar (Popup/Modal) -->
@@ -236,17 +267,14 @@ const calendarOptions = ref({
 
 <style scoped>
 /* CSS Car Animation */
-.car-animation {
-    animation: drive 7s linear infinite;
+.car-wrapper {
+    display: inline-block;
+    /* Start from far right, move to far left over 10s */
+    animation: driveForward 10s linear infinite; 
 }
-
-@keyframes drive {
-    0% {
-        transform: translateX(-100px);
-    }
-    100% {
-        transform: translateX(calc(100vw + 100px));
-    }
+@keyframes driveForward {
+    0% { transform: translateX(100vw); }  /* Start off-screen Right */
+    100% { transform: translateX(-100vw); } /* End off-screen Left */
 }
 
 /* Compact Calendar Styling for the Grid Column */
