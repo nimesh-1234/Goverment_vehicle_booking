@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nimeshdilshan/vehicle-booking-app:latest
+    container_name: vehicle_booking_app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www
+    networks:
+      - vehicle_booking_network
+    depends_on:
+      - db
+
+  webserver:
+    image: nginx:alpine
+    container_name: vehicle_booking_webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - vehicle_booking_network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: vehicle_booking_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: vehicle_booking
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - vehicle_booking_network
+
+networks:
+  vehicle_booking_network:
+    driver: bridge
+
+volumes:
+  dbdata:
