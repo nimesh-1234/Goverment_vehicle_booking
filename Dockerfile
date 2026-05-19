@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (Changed to npm install to fix the lockfile error)
+RUN npm install
 
 # Copy the rest of the application
 COPY . .
@@ -39,22 +39,22 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www
+# Set working directory (Must match nginx.conf and docker-compose.yml)
+WORKDIR /var/webapps/vehicle_booking
 
 # Copy existing application directory contents
 COPY . .
 
 # Copy compiled assets from Stage 1
-COPY --from=build /app/public/build /var/www/public/build
+COPY --from=build /app/public/build ./public/build
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage \
-    && chmod -R 775 /var/www/bootstrap/cache
+# Set permissions for Laravel
+RUN chown -R www-data:www-data /var/webapps/vehicle_booking \
+    && chmod -R 775 /var/webapps/vehicle_booking/storage \
+    && chmod -R 775 /var/webapps/vehicle_booking/bootstrap/cache
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000

@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import FullCalendar from '@fullcalendar/vue3';

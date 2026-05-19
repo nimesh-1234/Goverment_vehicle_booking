@@ -9,7 +9,7 @@ services:
     container_name: vehicle_booking_app
     restart: unless-stopped
     volumes:
-      - .:/var/www
+      - .:/var/webapps/vehicle_booking
     networks:
       - vehicle_booking_network
     depends_on:
@@ -22,7 +22,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - .:/var/www
+      - .:/var/webapps/vehicle_booking
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - vehicle_booking_network
@@ -36,6 +36,8 @@ services:
     environment:
       MYSQL_DATABASE: vehicle_booking
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     volumes:
       - dbdata:/var/lib/mysql
     networks:
