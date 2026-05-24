@@ -13,9 +13,12 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
     resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'resources/js'),
-        },
+        alias: [
+            {
+                find: /^@\/(?!(actions|routes)\/)(.*)/,
+                replacement: path.resolve(__dirname, 'resources/js/$2').replace(/\\/g, '/'),
+            },
+        ],
     },
     plugins: [
         laravel({

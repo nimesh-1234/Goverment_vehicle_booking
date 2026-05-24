@@ -76,10 +76,6 @@ Route::get('/dashboard', function (Request $request) {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     // Strict Branch Isolation
     Route::get('/branch/{id}', function ($id) {
         return redirect()->route('dashboard')->with('error', 'Unauthorized: You can only access your assigned branch.');
@@ -122,3 +118,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/settings.php';
