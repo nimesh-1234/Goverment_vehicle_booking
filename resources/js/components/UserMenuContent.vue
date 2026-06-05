@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from 'lucide-vue-next';
+import { LogIn, LogOut, Settings } from 'lucide-vue-next';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -8,12 +8,12 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
-import { logout } from '@/routes';
+import { login, logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
 type Props = {
-    user: User;
+    user: User | null;
 };
 
 const handleLogout = () => {
@@ -30,7 +30,7 @@ defineProps<Props>();
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
-    <DropdownMenuGroup>
+    <DropdownMenuGroup v-if="user">
         <DropdownMenuItem :as-child="true">
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
@@ -38,8 +38,8 @@ defineProps<Props>();
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true">
+    <DropdownMenuSeparator v-if="user" />
+    <DropdownMenuItem v-if="user" :as-child="true">
         <Link
             class="block w-full cursor-pointer"
             :href="logout()"
@@ -50,6 +50,12 @@ defineProps<Props>();
         >
             <LogOut class="mr-2 h-4 w-4" />
             Log out
+        </Link>
+    </DropdownMenuItem>
+    <DropdownMenuItem v-else :as-child="true">
+        <Link class="block w-full cursor-pointer" :href="login()">
+            <LogIn class="mr-2 h-4 w-4" />
+            Log in
         </Link>
     </DropdownMenuItem>
 </template>
