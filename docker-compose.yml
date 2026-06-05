@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # 1. Laravel (PHP) Container
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vehicle_booking_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+
+  # 2. Nginx Web Server Container
+  web:
+    image: nginx:alpine
+    container_name: vehicle_booking_web
+    restart: unless-stopped
+    ports:
+      - "8000:80" # ඔයාගේ Ubuntu සර්වර් එකේ Port 8000 න් මේක වැඩ කරයි
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+
+  # 3. MySQL Database Container
+  db:
+    image: mysql:8.0
+    container_name: vehicle_booking_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - db_data:/var/lib/mysql # Database එකේ ඩේටා සේව් වෙලා තියෙන තැන
+      - ./docker/mysql:/docker-entrypoint-initdb.d # 👈 අර Magic SQL ෆෝල්ඩර් එක!
+    ports:
+      - "3306:3306"
+
+volumes:
+  db_data:
