@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import AnimatedLayout from '@/Layouts/AnimatedLayout.vue';
+import AnimatedLayout from '@/layouts/AnimatedLayout.vue';
 
 defineProps({
     canLogin: {

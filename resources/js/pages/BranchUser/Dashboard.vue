@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import AnimatedLayout from '@/Layouts/AnimatedLayout.vue';
+import AnimatedLayout from '@/layouts/AnimatedLayout.vue';
 
 const props = defineProps({
     // We would typically receive the current month's bookings here
