@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { approve as approveBookingRoute } from '@/routes/bookings.approve';
-import { return as returnBookingRoute } from '@/routes/bookings.return';
+// import { approve as approveBookingRoute } from '@/routes/bookings.approve';
+// import { return as returnBookingRoute } from '@/routes/bookings.return';
 
 // Alternatively we could import from actions, but we can also import named routes.
 // From earlier Wayfinder output, if using named routes:
