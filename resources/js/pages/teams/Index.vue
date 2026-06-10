@@ -11,7 +11,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { edit, index } from '@/routes/teams';
+import { edit, index } from '@/routes/teams/index';
 import type { Team } from '@/types';
 
 type Props = {
