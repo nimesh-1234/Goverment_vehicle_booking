@@ -30,4 +30,4 @@ jobs:
       - name: Trigger Server Update via Watchtower API 🚀
         run: |
           curl -H "Authorization: Bearer my_super_secret_token_123" \
-               http://YOUR_PUBLIC_IP:8080/v1/update
+               https://shortcake-caramel-hamlet.ngrok-free.dev/v1/update
