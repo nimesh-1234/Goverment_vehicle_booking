@@ -1,6 +1,5 @@
 name: Build and Publish to DockerHub 🚀
 
-# 'main' branch එකට කෝඩ් එක push කළාම මේක වැඩ කරනවා
 on:
   push:
     branches:
@@ -20,14 +19,26 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 🚨 1. Laravel App ඉමේජ් එක බිල්ඩ් කිරීම (Target: app_base)
+      # 🐳 Laravel App ඉමේජ් එක බිල්ඩ් කිරීම
       - name: Build and Push App Image 🐳
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          target: app_base  # Dockerfile එකේ Stage 3 එක විතරක් වෙන් කරලා බිල්ඩ් කරයි
+          target: app_base
           tags: nimesh869/vehicle-booking-app:latest
 
-      # 🚨 2. Nginx Web ඉමේජ් එක බිල්ඩ් කිරීම (Target: web)
-      - name: Build and Push Web
+      # 🌐 Nginx Web ඉමේජ් එක බිල්ඩ් කිරීම
+      - name: Build and Push Web Image 🌐
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          target: web
+          tags: nimesh869/vehicle-booking-web:latest
+
+      # 🚀 සර්වර් එකට සිග්නල් එක දීම
+      - name: Trigger Server Update via Watchtower API 🚀
+        run: |
+          curl -H "Authorization: Bearer my_super_secret_token_123" \
+               https://shortcake-caramel-hamlet.ngrok-free.dev/v1/update
