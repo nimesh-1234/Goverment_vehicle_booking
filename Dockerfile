@@ -4,7 +4,6 @@
 FROM composer:2 AS vendor
 WORKDIR /app
 
-# මුළු කෝඩ් එකම Copy කරලා Composer Install කරනවා
 COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
@@ -14,25 +13,18 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 FROM node:22-alpine AS frontend
 WORKDIR /app
 
-# Package files ටික දාලා npm install කරනවා
 COPY package.json package-lock.json* ./
 RUN npm install
 
-# මුළු කෝඩ් එකම Copy කරනවා
 COPY . .
-
-# **මෙන්න විසඳුම!** Stage 1 එකෙන් හැදුණු vendor ෆෝල්ඩර් එක මෙතනට Copy කරගන්නවා
 COPY --from=vendor /app/vendor ./vendor
-
-# දැන් බය නැතුව Production එකට Build කරනවා (දැන් Ziggy හොයාගන්න පුළුවන්)
 RUN npm run build
 
 # ==========================================
-# Stage 3: Production PHP-FPM Server
+# Stage 3: Production PHP-FPM Server (App)
 # ==========================================
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm-alpine AS app_base
 
-# PHP Extensions සහ අවශ්‍ය අමතර දේවල් Install කිරීම
 RUN apk add --no-cache \
     linux-headers \
     libpng-dev \
@@ -48,19 +40,27 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www
 
-# Laravel කෝඩ් එක සර්වර් එකට Copy කිරීම
+# මුළු Laravel කෝඩ් එකම සර්වර් එකට Copy කිරීම
 COPY . .
 
-# Stage 1 එකෙන් vendor ෆෝල්ඩර් එක Copy කරගැනීම
+# කලින් ස්ටේජ් වලින් Vendor සහ Build ෆයිල් ටික ඇදලා ගැනීම
 COPY --from=vendor /app/vendor ./vendor
-
-# Stage 2 එකෙන් Frontend Build ෆයිල් ටික Copy කරගැනීම
 COPY --from=frontend /app/public/build ./public/build
 
-# සර්වර් එකට ඕනේ කරන Permissions හැදීම
+# Permissions සැකසීම
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage \
     && chmod -R 775 /var/www/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]
+
+# ==========================================
+# Stage 4: Production Nginx Server (Web)
+# ==========================================
+FROM nginx:alpine AS web
+
+WORKDIR /var/www
+
+# 🚨 Stage 3 එකේ පිරිසිදුවට හැදුණු මුළු ප්‍රොජෙක්ට් කෝඩ් එකම Nginx එක ඇතුළටත් කොපි කරනවා!
+COPY --from=app_base /var/www /var/www
