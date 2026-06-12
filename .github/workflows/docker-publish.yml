@@ -1,6 +1,6 @@
 name: Build and Publish to DockerHub 🚀
 
-# මේකෙන් කියන්නේ 'main' branch එකට කෝඩ් එක push කළාම මේක වැඩ කරන්න ඕනේ කියලයි
+# 'main' branch එකට කෝඩ් එක push කළාම මේක වැඩ කරනවා
 on:
   push:
     branches:
@@ -25,7 +25,10 @@ jobs:
         with:
           context: .
           push: true
-          tags: nimesh869/vehicle-booking-app:latest
+          # 🚨 මෙන්න මෙතනට tags දෙකක් දාලා තියෙන්නේ. එතකොට එකම කෝඩ් එක ඉමේජ් දෙකටම ලොක් වෙනවා!
+          tags: |
+            nimesh869/vehicle-booking-app:latest
+            nimesh869/vehicle-booking-web:latest
 
       - name: Trigger Server Update via Watchtower API 🚀
         run: |
