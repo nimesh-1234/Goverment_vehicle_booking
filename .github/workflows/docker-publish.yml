@@ -20,17 +20,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image 🐳
+      # 🚨 1. Laravel App ඉමේජ් එක බිල්ඩ් කිරීම (Target: app_base)
+      - name: Build and Push App Image 🐳
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          # 🚨 මෙන්න මෙතනට tags දෙකක් දාලා තියෙන්නේ. එතකොට එකම කෝඩ් එක ඉමේජ් දෙකටම ලොක් වෙනවා!
-          tags: |
-            nimesh869/vehicle-booking-app:latest
-            nimesh869/vehicle-booking-web:latest
+          target: app_base  # Dockerfile එකේ Stage 3 එක විතරක් වෙන් කරලා බිල්ඩ් කරයි
+          tags: nimesh869/vehicle-booking-app:latest
 
-      - name: Trigger Server Update via Watchtower API 🚀
-        run: |
-          curl -H "Authorization: Bearer my_super_secret_token_123" \
-               https://shortcake-caramel-hamlet.ngrok-free.dev/v1/update
+      # 🚨 2. Nginx Web ඉමේජ් එක බිල්ඩ් කිරීම (Target: web)
+      - name: Build and Push Web
