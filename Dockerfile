@@ -45,7 +45,9 @@ COPY . .
 
 # කලින් ස්ටේජ් වලින් Vendor සහ Build ෆයිල් ටික ඇදලා ගැනීම
 COPY --from=vendor /app/vendor ./vendor
-COPY --from=frontend /app/public/build ./public/build
+
+# 🚨 මෙන්න මෙතන පාත් එක නිවැරදි කළා: /app/public/build එක කෙලින්ම /var/www/public/build එකට දැම්මා
+COPY --from=frontend /app/public/build /var/www/public/build
 
 # Permissions සැකසීම
 RUN chown -R www-data:www-data /var/www \
@@ -62,5 +64,5 @@ FROM nginx:alpine AS web
 
 WORKDIR /var/www
 
-# 🚨 Stage 3 එකේ පිරිසිදුවට හැදුණු මුළු ප්‍රොජෙක්ට් කෝඩ් එකම Nginx එක ඇතුළටත් කොපි කරනවා!
+# Stage 3 එකේ පිරිසිදුවට හැදුණු මුළු ප්‍රොජෙක්ට් කෝඩ් එකම Nginx එක ඇතුළටත් කොපි කරනවා!
 COPY --from=app_base /var/www /var/www
