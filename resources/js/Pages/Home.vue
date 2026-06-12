@@ -161,7 +161,7 @@ const calendarOptions = ref({
             <!-- 4. Branches Section -->
             <div class="mt-8">
                 <div class="text-center mb-10">
-                    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Our Branche</h2>
+                    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Our branche</h2>
                     <p class="mt-2 text-gray-500">Select your branch to login and request a vehicle.</p>
                 </div>
                 
