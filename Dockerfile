@@ -35,8 +35,10 @@ RUN apk add --no-cache \
     unzip \
     curl \
     mariadb-client \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql bcmath gd zip
+    && docker-php-ext-configure gd --with-freetype --with-jpeg
+
+# 🚨 මෙන්න මෙතනට පේළි දෙකම පැහැදිලිවම එකතු කළා නිමේෂ්! VS Code එකේ මෙහෙමම දාන්න:
+RUN docker-php-ext-install pdo pdo_mysql bcmath gd zip
 
 WORKDIR /var/www
 
@@ -46,7 +48,7 @@ COPY . .
 # කලින් ස්ටේජ් වලින් Vendor සහ Build ෆයිල් ටික ඇදලා ගැනීම
 COPY --from=vendor /app/vendor ./vendor
 
-# 🚨 මෙන්න මෙතන පාත් එක නිවැරදි කළා: /app/public/build එක කෙලින්ම /var/www/public/build එකට දැම්මා
+# මෙන්න මෙතන පාත් එක නිවැරදි කළා: /app/public/build එක කෙලින්ම /var/www/public/build එකට දැම්මා
 COPY --from=frontend /app/public/build /var/www/public/build
 
 # Permissions සැකසීම
@@ -64,5 +66,5 @@ FROM nginx:alpine AS web
 
 WORKDIR /var/www
 
-# Stage 3 එකේ පිරිසිදුවට හැදුණු මුළු ප්‍රොජෙක්ට් කෝඩ් එකම Nginx එක ඇතුළටත් කොපි කරනවා!
+# Stage 3 එකේ පිරිසිදුවට හැදුණු මුළු穩 ප්‍රොජෙක්ට් කෝඩ් එකම Nginx එක ඇතුළටත් කොපි කරනවා!
 COPY --from=app_base /var/www /var/www
